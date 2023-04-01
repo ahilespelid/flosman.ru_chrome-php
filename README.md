@@ -3,35 +3,35 @@
 [![Latest Stable Version](https://poser.pugx.org/chrome-php/chrome/version)](https://packagist.org/packages/chrome-php/chrome)
 [![License](https://poser.pugx.org/chrome-php/chrome/license)](https://packagist.org/packages/chrome-php/chrome)
 
-This library lets you start playing with chrome/chromium in headless mode from PHP.
+Эта библиотека позволяет поиграться с chrome/chromium в headless режиме с PHP.
 
-Can be used synchronously and asynchronously!
-
-
-## Features
-
-- Open chrome or chromium browser from php
-- Create pages and navigate to pages
-- Take screenshots
-- Evaluate javascript on the page
-- Make PDF
-- Emulate mouse
-- Emulate keyboard
-- Always IDE friendly
-
-Happy browsing!
+Может использоваться синхронно и асинхронно!
 
 
-## Requirements
+## Характеристики
 
-Requires PHP 7.4-8.2 and a chrome/chromium 65+ executable.
+- Откройте chrome браузер или другой на базе chromium из php
+- Открывайте страницы и переходите по ним
+- Делайте скриншоты
+- Оцените javascript на странице
+- Создавайте PDF слепки страниц
+- Эмулируйте мышь
+- Эмулируйте клавиатуру
+- Всегда дружественный к IDE
 
-Note that the library is only tested on Linux but is compatible with macOS and Windows.
+Приятного просмотра!
 
 
-## Installation
+## Требования
 
-The library can be installed with Composer and is available on packagist under
+Требуется PHP 7.4-8.2 и исполняемый файл chrome / chromium 65+.
+
+Обратите внимание, что библиотека тестируется только в Linux, но совместима с macOS и Windows.
+
+
+## Установка
+
+Библиотека может быть установлена с Composer и доступна на packagist
 [chrome-php/chrome](https://packagist.org/packages/chrome-php/chrome):
 
 ```bash
@@ -39,10 +39,9 @@ $ composer require chrome-php/chrome
 ```
 
 
-## Usage
+## Использование
 
-It uses a simple and understandable API to start chrome, to open pages, take screenshots, crawl websites... and almost everything that you can do with chrome as a human.
-
+Он использует простой и понятный API для запуска Chrome, открытия страниц, создания скриншотов, обхода веб-сайтов... и почти все, что вы можете сделать с Chrome как человек.
 ```php
 use HeadlessChromium\BrowserFactory;
 
@@ -70,12 +69,11 @@ try {
 }
 ```
 
-### Using different chrome executable
+### Использование другого исполняемого файла Chrome
 
-When starting, the factory will look for the environment variable ``"CHROME_PATH"`` to use as the chrome executable.
-If the variable is not found, it will try to guess the correct executable path according to your OS or use ``"chrome"`` as the default.
+При запуске фабрика будет искать переменную среды "CHROME_PATH" для использования в качестве исполняемого файла Chrome. Если переменная не найдена, она попытается угадать правильный путь к исполняемому файлу в соответствии с вашей операционной системой или использовать "chrome" по умолчанию.
 
-You are also able to explicitly set up any executable of your choice when creating a new object. For instance ``"chromium-browser"``:
+Вы также можете явно настроить любой исполняемый файл по вашему выбору при создании нового объекта. Например ``"chromium-browser"``:
 
 ```php
 use HeadlessChromium\BrowserFactory;
@@ -84,9 +82,9 @@ use HeadlessChromium\BrowserFactory;
 $browserFactory = new BrowserFactory('chromium-browser');
 ```
 
-### Debugging
+### Отладка
 
-The following example disables headless mode to ease debugging
+Следующий пример отключает headless режим для облегчения отладки
 
 ```php
 use HeadlessChromium\BrowserFactory;
@@ -98,7 +96,7 @@ $browser = $browserFactory->createBrowser([
 ]);
 ```
 
-Other debug options:
+Другие параметры отладки:
 
 ```php
 [
@@ -107,16 +105,16 @@ Other debug options:
 ]
 ```
 
-About ``debugLogger``: this can be any of a resource string, a resource, or an object implementing
-``LoggerInterface`` from Psr\Log (such as [monolog](https://github.com/Seldaek/monolog)
+О ``debugLogger``: это может быть любая строка ресурса, ресурс или объект, реализуемый 
+``LoggerInterface`` из Psr\Log (such as [monolog](https://github.com/Seldaek/monolog)
 or [apix/log](https://github.com/apix/log)).
 
 
 ## API
 
-### Browser Factory
+### Фабрика браузеров
 
-Options set directly in the `createBrowser` method will be used only for a single browser creation. The default options will be ignored.
+Параметры, установленные непосредственно в `createBrowser` методе, будут использоваться только для создания одного браузера. Параметры по умолчанию будут проигнорированы.
 
 ```php
 use HeadlessChromium\BrowserFactory;
@@ -131,7 +129,7 @@ $browser = $browserFactory->createBrowser([
 $browser2 = $browserFactory->createBrowser();
 ```
 
-Options set using the `setOptions` and `addOptions` methods will persist.
+Параметры, установленные с помощью методов `setOptions` и `addOptions` будут сохранены.
 
 ```php
 $browserFactory->setOptions([
@@ -153,40 +151,40 @@ $browserFactory->addOptions(['enableImages' => true]);
 $browser4 = $browserFactory->createBrowser();
 ```
 
-#### Available options
+#### Доступные опции
 
-Here are the options available for the browser factory:
+Вот параметры, доступные для браузера factory:
 
-| Option name               | Default | Description                                                                                  |
-|---------------------------|---------|----------------------------------------------------------------------------------------------|
-| `connectionDelay`         | `0`     | Delay to apply between each operation for debugging purposes                                 |
-| `customFlags`             | none    | An array of flags to pass to the command line. Eg: `['--option1', '--option2=someValue']`    |
-| `debugLogger`             | `null`  | A string (e.g "php://stdout"), or resource, or PSR-3 logger instance to print debug messages |
-| `enableImages`            | `true`  | Toggles loading of images                                                                    |
-| `envVariables`            | none    | An array of environment variables to pass to the process (example DISPLAY variable)          |
-| `headers`                 | none    | An array of custom HTTP headers                                                              |
-| `headless`                | `true`  | Enable or disable headless mode                                                              |
-| `ignoreCertificateErrors` | `false` | Set chrome to ignore ssl errors                                                              |
-| `keepAlive`               | `false` | Set to `true` to keep alive the chrome instance when the script terminates                   |
-| `noSandbox`               | `false` | Enable no sandbox mode, useful to run in a docker container                                  |
-| `noProxyServer`           | `false` | Don't use a proxy server, always make direct connections. Overrides other proxy settings.    |
-| `proxyBypassList`         | none    | Specifies a list of hosts for whom we bypass proxy settings and use direct connections       |
-| `proxyServer`             | none    | Proxy server to use. usage: `127.0.0.1:8080` (authorisation with credentials does not work)  |
-| `sendSyncDefaultTimeout`  | `5000`  | Default timeout (ms) for sending sync messages                                               |
-| `startupTimeout`          | `30`    | Maximum time in seconds to wait for chrome to start                                          |
-| `userAgent`               | none    | User agent to use for the whole browser (see page API for alternative)                       |
-| `userDataDir`             | none    | Chrome user data dir (default: a new empty dir is generated temporarily)                     |
-| `userCrashDumpsDir`       | none    | The directory crashpad should store dumps in (crash reporter will be enabled automatically)  |
-| `windowSize`              | none    | Size of the window. usage: `$width, $height` - see also Page::setViewport                    |
+| Название опции            | По умолчанию | Описание                                                                                                                     |
+|---------------------------|--------------|------------------------------------------------------------------------------------------------------------------------------|
+| `connectionDelay`         | `0`          | Задержка, применяемая между каждой операцией в целях отладки                                                                 |
+| `customFlags`             | none         | Массив флагов для передачи в командную строку. Например: `['--option1', '--option2=someValue']`.                             |
+| `debugLogger`             | `null`       | Строка (e.g "php://stdout"), или ресурс, или PSR-3 logger instance для печати отладочных сообщений.                          |
+| `enableImages`            | `true`       | Переключает загрузку изображений.                                                                                            |
+| `envVariables`            | none         | Массив переменных среды для передачи процессу (пример отображаемой переменной).                                              |
+| `headers`                 | none         | Массив пользовательских HTTP-заголовков.                                                                                     |
+| `headless`                | `true`       | Включить или отключить headless режим.                                                                                       |
+| `ignoreCertificateErrors` | `false`      | Установите Chrome так, чтобы он игнорировал ошибки ssl.                                                                      |
+| `keepAlive`               | `false`      | Установите значение `true` чтобы поддерживать экземпляр Chrome в рабочем состоянии при завершении работы скрипта.            |
+| `noSandbox`               | `false`      | Включить режим без изолированной среды, полезный для запуска в контейнере docker.                                            |
+| `noProxyServer`           | `false`      | Не используйте прокси-сервер, всегда устанавливайте прямые подключения. Переопределяет другие настройки прокси.              |
+| `proxyBypassList`         | none         | Задает список хостов, для которых мы обходим настройки прокси и используем прямые подключения.                               |
+| `proxyServer`             | none         | Прокси-сервер для использования. использование: `127.0.0.1:8080` (авторизация с использованием учетных данных не работает).  |
+| `sendSyncDefaultTimeout`  | `5000`       | Время ожидания по умолчанию (мс) для отправки сообщений синхронизации.                                                       |
+| `startupTimeout`          | `30`         | Максимальное время ожидания запуска Chrome в секундах.                                                                       |
+| `userAgent`               | none         | Пользовательский агент для использования во всем браузере (альтернативный вариант см. в page API).                           |
+| `userDataDir`             | none         | Каталог пользовательских данных Chrome (по умолчанию: временно создается новый пустой каталог).                              |
+| `userCrashDumpsDir`       | none         | Каталог, в котором crashpad должен хранить дампы (crash reporter будет включен автоматически).                               |
+| `windowSize`              | none         | Размер окна. использование: $width, $height - смотрите также Страницу::setViewport.                                          |
 
 
-### Persistent Browser
+### Постоянный браузер
 
-This example shows how to share a single instance of chrome for multiple scripts.
+В этом примере показано, как совместно использовать один экземпляр Chrome для нескольких сценариев.
 
-The first time the script is started we use the browser factory in order to start chrome, afterwards we save the uri to connect to this browser in the file system.
+При первом запуске скрипта мы используем фабрику браузера для запуска Chrome, после чего сохраняем uri для подключения к этому браузеру в файловой системе.
 
-The next calls to the script will read the uri from that file in order to connect to the chrome instance instead of creating a new one. If chrome was closed or crashed, a new instance is started again.
+Следующие вызовы скрипта будут считывать uri из этого файла, чтобы подключиться к экземпляру Chrome вместо создания нового. Если chrome был закрыт или произошел сбой, новый экземпляр запускается снова.
 
 ```php
 use \HeadlessChromium\BrowserFactory;
@@ -209,27 +207,27 @@ try {
 }
 ```
 
-### Browser API
+### API браузера
 
-#### Create a new page (tab)
+#### Создать новую страницу (tab)
 
 ```php
 $page = $browser->createPage();
 ```
 
-#### Get opened pages (tabs)
+#### Получить открытые страницы (tabs)
 
 ```php
 $pages = $browser->getPages();
 ```
 
-#### Close the browser
+#### Закрыть браузер
 
 ```php
 $browser->close();
 ```
 
-### Set a script to evaluate before every page created by this browser will navigate
+### Установите скрипт для оценки перед переходом на каждую страницу, созданную этим браузером
 
 ```php
 $browser->setPagePreScript('// Simulate navigator permissions;
