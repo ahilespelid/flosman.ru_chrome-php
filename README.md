@@ -239,3 +239,230 @@ window.navigator.permissions.query = (parameters) => (
         originalQuery(parameters)
 );');
 ```
+
+### Page API
+
+#### Переход по URL
+
+```php
+// navigate
+$navigation = $page->navigate('http://example.com');
+
+// wait for the page to be loaded
+$navigation->waitForNavigation();
+```
+
+При использовании ``$navigation->waitForNavigation()`` вы будете ждать в течение 30 секунд, пока не сработает событие страницы "загружено".
+Вы можете изменить время ожидания или событие для прослушивания:
+
+```php
+use HeadlessChromium\Page;
+
+// wait 10secs for the event "DOMContentLoaded" to be triggered
+$navigation->waitForNavigation(Page::DOM_CONTENT_LOADED, 10000);
+```
+
+Доступные события (в порядке их запуска):
+
+- ``Page::DOM_CONTENT_LOADED``: DOM когда польностью загрузился
+- ``Page::LOAD``: (по умолчанию) страница отрендирелась со всеми ресурсами
+- ``Page::NETWORK_IDLE``: страница загружена, и в течение как минимум 500 мс не происходило никакой сетевой активности
+
+Когда вы хотите дождаться перехода по странице, могут возникнуть 2 основные проблемы.
+Во-первых, страница слишком длинная для загрузки, а во-вторых, страница, загрузки которой вы ожидали, была заменена.
+Хорошая новость заключается в том, что вы можете справиться с этими проблемами, используя старый добрый try-catch:
+
+```php
+use HeadlessChromium\Exception\OperationTimedOut;
+use HeadlessChromium\Exception\NavigationExpired;
+
+try {
+    $navigation->waitForNavigation()
+} catch (OperationTimedOut $e) {
+    // too long to load
+} catch (NavigationExpired $e) {
+    // An other page was loaded
+}
+```
+
+#### Создайте скрипт на странице
+
+После завершения загрузки страницы, вы можете инициировать произвольный скрипт на этой странице:
+
+```php
+// navigate
+$navigation = $page->navigate('http://example.com');
+
+// wait for the page to be loaded
+$navigation->waitForNavigation();
+
+// evaluate script in the browser
+$evaluation = $page->evaluate('document.documentElement.innerHTML');
+
+// wait for the value to return and get it
+$value = $evaluation->getReturnValue();
+```
+
+Иногда скрипт, который вы оцениваете, нажимает на ссылку или отправляет форму, в этом случае страница перезагружается, и вы
+захотите дождаться перезагрузки новой страницы.
+
+Вы можете дождаться загрузки с помощью ``$page->evaluate('здесь скрипт с перезагрузкой')->waitForPageReload()``.
+Пример доступен в [form-submit.php](./examples/form-submit.php)
+
+#### Вызов функций
+
+Эта альтернатива ``evaluate``, которая позволяет вызывать заданную функцию с заданными аргументами в контексте страницы:
+
+```php
+$evaluation = $page->callFunction(
+    "function(a, b) {\n    window.foo = a + b;\n}",
+    [1, 2]
+);
+
+$value = $evaluation->getReturnValue();
+```
+
+#### Добавьте тег скрипта
+
+Это полезно, если вы хотите добавить jQuery (или что-либо еще) на страницу:
+
+```php
+$page->addScriptTag([
+    'content' => file_get_contents('path/to/jquery.js')
+])->waitForResponse();
+
+$page->evaluate('$(".my.element").html()');
+```
+
+Вы также можете использовать URL-адрес для передачи атрибута src:
+
+```php
+$page->addScriptTag([
+    'url' => 'https://code.jquery.com/jquery-3.3.1.min.js'
+])->waitForResponse();
+
+$page->evaluate('$(".my.element").html()');
+```
+
+#### Добавьте HTML на страницу
+
+Вы можете в ручную внести HTML с помощью метода ```setHtml```.
+
+```php
+// Basic
+$page->setHtml('<p>text</p>');
+
+// Specific timeout & event
+$page->setHtml('<p>text</p>', 10000, Page::NETWORK_IDLE);
+```
+
+Когда HTML-код страницы обновляется, мы будем ждать загрузки страницы. Вы можете указать, как долго ждать и какого события ожидать, с помощью двух необязательных параметров. По умолчанию это значение равно 3000 мс и событию "загрузка".
+
+Обратите внимание, что этот метод не будет добавляться к текущей странице HTML, он полностью заменит ее.
+
+#### Взять HTML со страницы
+
+Вы можете использовать этот метод ```getHtml```, для выбора HTML со страницы.
+
+```php
+$html = $page->getHtml();
+```
+
+### Добавьте скрипт для оценки при навигации по странице
+
+```php
+$page->addPreScript('// Simulate navigator permissions;
+const originalQuery = window.navigator.permissions.query;
+window.navigator.permissions.query = (parameters) => (
+    parameters.name === 'notifications' ?
+        Promise.resolve({ state: Notification.permission }) :
+        originalQuery(parameters)
+);');
+```
+
+Если вашему скрипту необходимо, чтобы DOM был полностью загружен перед его запуском, вы можете использовать опцию "onLoad".:
+
+```php
+$page->addPreScript($script, ['onLoad' => true]);
+```
+
+#### Установка размера viewport
+
+Эта функция позволяет изменять размер области просмотра (эмуляция) для текущей страницы, не влияя на размер
+всех страниц браузера (см. также опцию ``"windowSize"`` от [BrowserFactory::createBrowser](#options)).
+
+```php
+$width = 600;
+$height = 300;
+$page->setViewport($width, $height)
+    ->await(); // wait for the operation to complete
+```
+
+#### Сделать screenshot
+
+```php
+// navigate
+$navigation = $page->navigate('http://example.com');
+
+// wait for the page to be loaded
+$navigation->waitForNavigation();
+
+// take a screenshot
+$screenshot = $page->screenshot([
+    'format'  => 'jpeg',  // default to 'png' - possible values: 'png', 'jpeg',
+    'quality' => 80,      // only if format is 'jpeg' - default 100
+]);
+
+// save the screenshot
+$screenshot->saveToFile('/some/place/file.jpg');
+```
+
+**Screenshot области страницы**
+
+Вы можете использовать опцию "обрезать", чтобы выбрать область на странице для screenshot
+
+```php
+use HeadlessChromium\Clip;
+
+// navigate
+$navigation = $page->navigate('http://example.com');
+
+// wait for the page to be loaded
+$navigation->waitForNavigation();
+
+// create a rectangle by specifying to left corner coordinates + width and height
+$x = 10;
+$y = 10;
+$width = 100;
+$height = 100;
+$clip = new Clip($x, $y, $width, $height);
+
+// take the screenshot (in memory binaries)
+$screenshot = $page->screenshot([
+    'clip'  => $clip,
+]);
+
+// save the screenshot
+$screenshot->saveToFile('/some/place/file.jpg');
+```
+
+**Полноразмерный screenshot**
+
+Вы также можете сделать снимок экрана для макета всей страницы (не только viewport) используя ``$page->getFullPageClip`` с атрибутом ``captureBeyondViewport = true``
+
+```php
+// navigate
+$navigation = $page->navigate('https://example.com');
+
+// wait for the page to be loaded
+$navigation->waitForNavigation();
+
+$screenshot = $page->screenshot([
+    'captureBeyondViewport' => true,
+    'clip' => $page->getFullPageClip(),
+    'format' => 'jpeg', // default to 'png' - possible values: 'png', 'jpeg',
+]);
+
+// save the screenshot
+$screenshot->saveToFile('/some/place/file.jpg');
+```
